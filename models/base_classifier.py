@@ -257,3 +257,34 @@ class BaseClassifier(ABC):
         # Calculer les scores ROC
         y_score = self.model.predict_proba(X_test)
         
+        # Calculer la courbe ROC et l'AUC pour chaque classe
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        
+        for i in range(n_classes):
+            fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
+        
+        # Tracer la courbe ROC pour chaque classe
+        plt.figure(figsize=figsize)
+        
+        colors = cycle(['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink'])
+        for i, color, cls in zip(range(n_classes), colors, classes):
+            plt.plot(fpr[i], tpr[i], color=color, lw=2,
+                     label=f'Classe {cls} (AUC = {roc_auc[i]:.2f})')
+        
+        plt.plot([0, 1], [0, 1], 'k--', lw=2)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('Taux de faux positifs')
+        plt.ylabel('Taux de vrais positifs')
+        plt.title(f'Courbe ROC multi-classe - {self.name}')
+        plt.legend(loc="lower right")
+        
+        if save_path:
+            plt.savefig(save_path)
+            print(f"Courbe ROC enregistrée dans {save_path}")
+        
+        plt.show()
+        plt.close() 
